@@ -116,17 +116,29 @@ function moxon_calculate_dimensions(f_mhz, dia_mm) =
 
 // Calculate the actual dimensions
 calc_result = moxon_calculate_dimensions(freq_mhz * correction_factor, wire_dia_mm);
-A = calc_result[0];
-B = calc_result[1];
-C = calc_result[2];
-D = calc_result[3];
-E = calc_result[4];
 
-wavelength = calc_result[5];
-diameter_valid = calc_result[6];
-boom_length_wavelengths = calc_result[7];
-wire_length_mm = calc_result[8];
-compactness_factor = calc_result[9];
+IDX_WIDTH = 0;
+IDX_DRIVER_TAIL_LENGTH = 1;
+IDX_GAP_LENGTH = 2;
+IDX_REFLECTOR_TAIL_LENGTH = 3;
+IDX_HEIGHT = 4;
+IDX_WAVELENGTH = 5;
+IDX_DIAMETER_VALID = 6;
+IDX_BOOM_LENGTH_WAVELENGTHS = 7;
+IDX_WIRE_LENGTH_MM = 8;
+IDX_COMPACTNESS_FACTOR = 9;
+
+width = calc_result[IDX_WIDTH];
+driver_tail_length = calc_result[IDX_DRIVER_TAIL_LENGTH];
+gap_length = calc_result[IDX_GAP_LENGTH];
+reflector_tail_length = calc_result[IDX_REFLECTOR_TAIL_LENGTH];
+height = calc_result[IDX_HEIGHT];
+
+wavelength = calc_result[IDX_WAVELENGTH];
+diameter_valid = calc_result[IDX_DIAMETER_VALID];
+boom_length_wavelengths = calc_result[IDX_BOOM_LENGTH_WAVELENGTHS];
+wire_length_mm = calc_result[IDX_WIRE_LENGTH_MM];
+compactness_factor = calc_result[IDX_COMPACTNESS_FACTOR];
 
 // Wire channel parameters
 wire_channel_dia = wire_dia_mm + wire_tolerance;	// Add tolerance for 3D printing
@@ -138,11 +150,11 @@ echo(str("Design frequency: ", freq_mhz, " MHz"));
 echo(str("Wire diameter: ", wire_dia_mm, " mm (", round(wire_dia_mm/wavelength * 1000000)/1000000, " λ)"));
 echo(str(""));
 echo(str("Calculated dimensions:"));
-echo(str("A (width): ", round(A*100)/100, " mm (", round(A/wavelength*1000)/1000, " λ)"));
-echo(str("B (driver tail): ", round(B*100)/100, " mm"));
-echo(str("C (gap): ", round(C*100)/100, " mm")); 
-echo(str("D (reflector tail): ", round(D*100)/100, " mm"));
-echo(str("E (height): ", round(E*100)/100, " mm (", round(E/wavelength*1000)/1000, " λ)"));
+echo(str("A (width): ", round(width*100)/100, " mm (", round(width/wavelength*1000)/1000, " λ)"));
+echo(str("B (driver tail): ", round(driver_tail_length*100)/100, " mm"));
+echo(str("C (gap): ", round(gap_length*100)/100, " mm")); 
+echo(str("D (reflector tail): ", round(reflector_tail_length*100)/100, " mm"));
+echo(str("E (height): ", round(height*100)/100, " mm (", round(height/wavelength*1000)/1000, " λ)"));
 echo(str(""));
 echo(str("Additional info:"));
 echo(str("Wavelength: ", round(wavelength*100)/100, " mm"));
@@ -168,7 +180,7 @@ difference() {
 
 		// Frequency text on handle near connector
 		if (show_frequency_text) {
-			translate([0, -(E/2 - 5), frame_thickness])
+			translate([0, -(height/2 - 5), frame_thickness])
 				linear_extrude(0.5) {
 					text(str(freq_mhz), size=text_size, font=text_font, halign = "center");
 				}
@@ -176,60 +188,60 @@ difference() {
 	}
 
 	// Wire channels - vertical sides
-	translate([-A/2, E/2 - corner_radius, frame_thickness-wire_depth])
-		rotate([90, 0, 0]) linear_extrude(E - corner_radius*2) circle(wire_channel_dia/2);
-	translate([A/2, E/2 - corner_radius, frame_thickness-wire_depth])
-		rotate([90, 0, 0]) linear_extrude(E - corner_radius*2) circle(wire_channel_dia/2);
+	translate([-width/2, height/2 - corner_radius, frame_thickness-wire_depth])
+		rotate([90, 0, 0]) linear_extrude(height - corner_radius*2) circle(wire_channel_dia/2);
+	translate([width/2, height/2 - corner_radius, frame_thickness-wire_depth])
+		rotate([90, 0, 0]) linear_extrude(height - corner_radius*2) circle(wire_channel_dia/2);
 
 	// Wire channels - horizontal sides
-	translate([-A/2 + corner_radius, E/2, frame_thickness-wire_depth])
-		rotate([0, 90, 0]) linear_extrude(A - corner_radius*2) circle(wire_channel_dia/2);
-	translate([-A/2 + corner_radius, -E/2, frame_thickness-wire_depth])
-		rotate([0, 90, 0]) linear_extrude(A - corner_radius*2) circle(wire_channel_dia/2);
+	translate([-width/2 + corner_radius, height/2, frame_thickness-wire_depth])
+		rotate([0, 90, 0]) linear_extrude(width - corner_radius*2) circle(wire_channel_dia/2);
+	translate([-width/2 + corner_radius, -height/2, frame_thickness-wire_depth])
+		rotate([0, 90, 0]) linear_extrude(width - corner_radius*2) circle(wire_channel_dia/2);
 
 	// Wire channel rounded corners
-	translate([-A/2 + corner_radius, E/2 - corner_radius, frame_thickness-wire_depth])
+	translate([-width/2 + corner_radius, height/2 - corner_radius, frame_thickness-wire_depth])
 		rotate([0, 0, 90]) rotate_extrude(angle=90) translate ([corner_radius,0,0]) circle(wire_channel_dia/2);
-	translate([A/2 - corner_radius, E/2 - corner_radius, frame_thickness-wire_depth])
+	translate([width/2 - corner_radius, height/2 - corner_radius, frame_thickness-wire_depth])
 		rotate_extrude(angle=90) translate ([corner_radius,0,0]) circle(wire_channel_dia/2);
-	translate([-A/2 + corner_radius, -E/2 + corner_radius, frame_thickness-wire_depth])
+	translate([-width/2 + corner_radius, -height/2 + corner_radius, frame_thickness-wire_depth])
 		rotate([0, 0, 180]) rotate_extrude(angle=90) translate ([corner_radius,0,0]) circle(wire_channel_dia/2);
-	translate([A/2 - corner_radius, -E/2 + corner_radius, frame_thickness-wire_depth])
+	translate([width/2 - corner_radius, -height/2 + corner_radius, frame_thickness-wire_depth])
 		rotate([0, 0, 270]) rotate_extrude(angle=90) translate ([corner_radius,0,0]) circle(wire_channel_dia/2);
 
 	// left wire endstop
-	translate([-(A/2 +  wire_channel_dia/2 + 1), E/2 - B - C, 0])
-		cube(size=[ wire_channel_dia + 2, C, frame_thickness]);
+	translate([-(width/2 +  wire_channel_dia/2 + 1), height/2 - driver_tail_length - gap_length, 0])
+		cube(size=[ wire_channel_dia + 2, gap_length, frame_thickness]);
 	// right wire endstop
-	translate([(A/2 -  wire_channel_dia/2 - 1), E/2 - B - C, 0])
-		cube(size=[wire_channel_dia + 2, C, frame_thickness]);
+	translate([(width/2 -  wire_channel_dia/2 - 1), height/2 - driver_tail_length - gap_length, 0])
+		cube(size=[wire_channel_dia + 2, gap_length, frame_thickness]);
 
 	// Big notch for wire insertion
-	translate([0, E/2+frame_width/2, 0])
+	translate([0, height/2+frame_width/2, 0])
 		rcube([10, 20+frame_width, frame_thickness], 3, true, false);
 
 	// Smaller notch for wire routing
-	translate([0, E/2, 0])
+	translate([0, height/2, 0])
 		rcube([5, 40, frame_thickness], 1.5, true, false);
 
 	// Holes for cable ties (scaled with antenna size)
-	if (E > 80) {
+	if (height > 80) {
 		cable_ties(4);
 		translate([0, -20, 0])
 			cable_ties(4);
 	}
-	else if (E > 40) {
+	else if (height > 40) {
 		translate([0, -7, 0])
 			cable_ties(4);
 	}
 	if (handle_length > 30) {
-		translate([0, -(E/2) - 15, 0])
+		translate([0, -(height/2) - 15, 0])
 			cable_ties(4);
 	}
 
 	// Holes for mounting a connector
 	if (handle_length > 0) {
-		translate([0, -E/2 - frame_width - handle_length + 14, 0])
+		translate([0, -height/2 - frame_width - handle_length + 14, 0])
 			connectors();
 	}
 }
@@ -237,15 +249,15 @@ difference() {
 module base() {
 	difference() {
 		// outer roundtangle
-		square([A + frame_width, E + frame_width], center=true);
+		square([width + frame_width, height + frame_width], center=true);
 		// cutout
-		square([(A - frame_width), E - frame_width], center=true);
+		square([(width - frame_width), height - frame_width], center=true);
 	}
 
 	// handle
 	translate([0, -handle_length/2, 0])
 		fillet_o(6)
-			square([handle_width, E + handle_length + frame_width], center=true);
+			square([handle_width, height + handle_length + frame_width], center=true);
 }
 
 module cable_ties(spacing) {
