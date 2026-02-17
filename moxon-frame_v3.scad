@@ -5,18 +5,18 @@
 // 2025 DO2THX (tom@jitter.eu)
 // License: CC-BY-NC-SA
 
-// ===== USER ADJUSTABLE PARAMETERS =====
+/* [USER ADJUSTABLE PARAMETERS] */
 
-// === BASIC ANTENNA DESIGN ===
+/* [BASIC ANTENNA DESIGN] */
 // Design frequency in MHz
 freq_mhz = 433;
 // Wire diameter in mm
 wire_dia_mm = 1.0;
 
-// === MATERIAL PROPERTIES ===
+/* [MATERIAL PROPERTIES] */
 correction_factor = 1.1;
 
-// === FRAME CONSTRUCTION ===
+/* [FRAME CONSTRUCTION] */
 // Frame wall thickness (mm)
 frame_width = 7.0;
 // Frame height/thickness (mm)
@@ -24,25 +24,25 @@ frame_thickness = 2.5;
 // Corner rounding radius (mm)
 corner_radius = 3.0;
 
-// === WIRE CHANNEL ===
+/* [WIRE CHANNEL] */
 // Wire clearance tolerance (mm) for 3D-printing
 wire_tolerance = 0;
 // Channel depth as fraction of wire diameter
 wire_depth_ratio = 0.33;
 
-// === HANDLE & MOUNTING ===
+/* [HANDLE & MOUNTING] */
 // Handle length (mm) - set to 0 to disable
 handle_length = 60;
 // Handle width (mm)
 handle_width = 21;
 
-// === CONNECTOR ===
+/* [CONNECTOR] */
 // RF connector type (see README)
 connector = "bnc"; // ["none", "sma", "sma2", "bnc", "bnc2", "screw"]
 // Screw diameter (mm) - for screw connector type
 screw_dia = 4.4;
 
-// === APPEARANCE ===
+/* [APPEARANCE] */
 // Frequency label text size (mm)
 text_size = 7;
 // Text font
@@ -50,11 +50,11 @@ text_font = "Liberation Sans:style=Bold";
 // Show frequency label on handle
 show_frequency_text = true;
 
-// === RENDERING QUALITY ===
+/* [RENDERING QUALITY] */
 // Circle resolution - higher values = smoother curves but slower rendering
 $fn = 64;
 
-// ===== DERIVED PARAMETERS (DO NOT EDIT) =====
+/* [Hidden] */
 
 function moxon_calculate_dimensions(f_mhz, dia_mm) = 
 	let(
