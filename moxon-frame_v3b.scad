@@ -56,6 +56,16 @@ connector = "bnc"; // ["none", "sma", "sma2", "bnc", "bnc2", "screw"]
 // Screw type - for screw connector type
 screw_type = "M3";
 
+/* [COAX ROUTING] */
+
+coax_diameter = 5;
+
+coax_solder_space_width = 12;
+coax_routing_gap_width = 6;
+coax_routing_gap_extra_length = 10;
+
+include_coax_clamp = true;
+
 /* [APPEARANCE] */
 // Frequency label text size (mm)
 text_size = 7;
@@ -70,15 +80,6 @@ show_frequency_text = true;
 // Circle resolution - higher values = smoother curves but slower rendering
 $fn = 64;
 
-/* [COAX ROUTING] */
-
-coax_diameter = 5;
-
-coax_solder_space_width = 12;
-coax_routing_gap_width = 6;
-coax_routing_gap_extra_length = 10;
-
-include_coax_clamp = true;
 
 // END SECTION: user adjustable parameters
 
