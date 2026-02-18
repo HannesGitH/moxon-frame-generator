@@ -37,10 +37,12 @@ wire_tolerance = 0.1;
 wire_depth_ratio = 0.66;
 
 /* [HANDLE & MOUNTING] */
-// Handle length (mm) - set to 0 to disable
-handle_length = 60;
-// Handle width (mm)
+// Handle (offset between mount-point and antenna)
+handle_length = 30;
+// Handle width (mm), this should coincide with the required mounting width
 handle_width = 21;
+// mounting direction
+mounting_direction = "flat"; // ["flat", "up", "forward"]
 
 /* [CONNECTOR] */
 // RF connector type (see README)
@@ -121,6 +123,32 @@ module rrect_ring(width, height, radius, corner_radius = corner_radius) {
 
 // END SECTION: general shape helpers
 
+// SECTION: handle
+
+module attach_handle() {
+  if (mounting_direction == "flat") {
+    attach(TOP, BOTTOM) children();
+  } else if (mounting_direction == "up") {
+    attach(BACK, BOTTOM, align=TOP) children();
+  } else if (mounting_direction == "forward") {
+    attach(BACK, BOTTOM, align=RIGHT+TOP, spin=90) children();
+  } else {
+    echo("Invalid mounting direction");
+  }
+}
+
+module handle() {
+  cuboid([handle_width, frame_thickness, handle_length], rounding=-5, edges=[BOTTOM + RIGHT, BOTTOM + LEFT])
+    attach_handle()
+      cuboid([handle_width, frame_thickness, handle_width], rounding=5, edges=[UP + RIGHT, UP + LEFT])
+        attach(FWD, BOTTOM, inside=true, shiftout=eps / 2)
+          tag("remove") selected_connector_negative(connector=connector, thickness=frame_thickness + eps, screw_type=screw_type);
+}
+
+// END SECTION: handle
+
+// SECTION: antenna
+
 module antenna_gap_cutout() {
   _cutout_width = 3 + wire_channel_dia;
   zrrect([frame_width * 2 + _cutout_width, frame_width * 2 + gap_length, frame_thickness], corner_radius=2);
@@ -129,7 +157,7 @@ module antenna_gap_cutout() {
 
 module main_frame() {
   difference() {
-    zrrect([width + frame_width, height + frame_width, frame_thickness], corner_radius + frame_width / 2);
+    zrrect([width + frame_width, height + frame_width, frame_thickness], corner_radius + frame_width / 2) children();
     zrrect([width - frame_width, height - frame_width, frame_thickness + eps], corner_radius - frame_width / 2);
   }
 
@@ -177,7 +205,7 @@ module coax_routing() {
 
 module antenna() {
   diff() {
-    main_frame();
+    main_frame() children();
     // I dont know why, but rendering here, speeds up things DRAMATICALLY
     render() up((frame_thickness - wire_depth) / 2) wire_channel();
     xflip_copy() {
@@ -187,6 +215,8 @@ module antenna() {
   }
 }
 
-antenna();
+// END SECTION: antenna
 
-// selected_connector_negative(connector = connector, thickness = frame_thickness, screw_type = screw_type);
+antenna()
+  attach(FRONT, BOTTOM)
+    handle();
