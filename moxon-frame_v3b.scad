@@ -44,10 +44,16 @@ handle_width = 21;
 // mounting direction
 mounting_direction = "flat"; // ["flat", "up", "forward"]
 
+// stabilize mounting point - only used if not "flat"
+stabilize_mounting_point = true;
+
+// corner radius (rarely used)
+handle_corner_radius = 5;
+
 /* [CONNECTOR] */
 // RF connector type (see README)
 connector = "bnc"; // ["none", "sma", "sma2", "bnc", "bnc2", "screw"]
-// Screw diameter (mm) - for screw connector type
+// Screw type - for screw connector type
 screw_type = "M3";
 
 /* [APPEARANCE] */
@@ -55,7 +61,9 @@ screw_type = "M3";
 text_size = 7;
 // Text font
 text_font = "Liberation Sans:style=Bold";
-// Show frequency label on handle
+
+//TODO: actually implement this
+// Show frequency label on handle 
 show_frequency_text = true;
 
 /* [RENDERING QUALITY] */
@@ -125,22 +133,33 @@ module rrect_ring(width, height, radius, corner_radius = corner_radius) {
 
 // SECTION: handle
 
+module handle_stabilizer() {
+  prismoid(size1=[handle_width, frame_thickness], size2=[0, frame_thickness], h=handle_width - handle_corner_radius, shift=[-handle_width / 2, 0]);
+}
+
 module attach_handle() {
   if (mounting_direction == "flat") {
     attach(TOP, BOTTOM) children();
   } else if (mounting_direction == "up") {
     attach(BACK, BOTTOM, align=TOP) children();
+	if (stabilize_mounting_point) {
+      attach(BACK, BOTTOM, align=LEFT + TOP, spin=-90) handle_stabilizer();
+      attach(BACK, BOTTOM, align=RIGHT + TOP, spin=-90) handle_stabilizer();
+    }
   } else if (mounting_direction == "forward") {
-    attach(BACK, BOTTOM, align=RIGHT+TOP, spin=90) children();
+    attach(BACK, BOTTOM, align=RIGHT + TOP, spin=90) children();
+	if (stabilize_mounting_point) {
+      attach(BACK, BOTTOM, align=RIGHT + TOP, spin=0) handle_stabilizer();
+    }
   } else {
     echo("Invalid mounting direction");
   }
 }
 
 module handle() {
-  cuboid([handle_width, frame_thickness, handle_length], rounding=-5, edges=[BOTTOM + RIGHT, BOTTOM + LEFT])
+  cuboid([handle_width, frame_thickness, handle_length], rounding=-handle_corner_radius, edges=[BOTTOM + RIGHT, BOTTOM + LEFT])
     attach_handle()
-      cuboid([handle_width, frame_thickness, handle_width], rounding=5, edges=[UP + RIGHT, UP + LEFT])
+      cuboid([handle_width, frame_thickness, handle_width], rounding=handle_corner_radius, edges=[UP + RIGHT, UP + LEFT])
         attach(FWD, BOTTOM, inside=true, shiftout=eps / 2)
           tag("remove") selected_connector_negative(connector=connector, thickness=frame_thickness + eps, screw_type=screw_type);
 }
