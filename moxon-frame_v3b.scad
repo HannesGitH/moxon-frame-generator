@@ -27,6 +27,8 @@ frame_width = 4.0;
 frame_thickness = 1.5;
 // Corner rounding radius (mm)
 corner_radius = 1.0;
+// enable cross-beams for extra stability
+enable_cross_beams = true;
 
 /* [WIRE CHANNEL] */
 // Wire clearance tolerance (mm) for 3D-printing
@@ -97,6 +99,8 @@ wire_depth = wire_dia * wire_depth_ratio;
 
 gap_offset_from_center = (reflector_tail_length - driver_tail_length) / 2;
 
+coax_bay_width = coax_diameter + frame_thickness * 2;
+
 //
 eps = .01;
 
@@ -128,6 +132,16 @@ module main_frame() {
     zrrect([width + frame_width, height + frame_width, frame_thickness], corner_radius + frame_width / 2);
     zrrect([width - frame_width, height - frame_width, frame_thickness + eps], corner_radius - frame_width / 2);
   }
+
+  if (enable_cross_beams) {
+    // calculate inner square dimensions
+    inner_height = height - frame_width;
+    inner_width = (width - frame_width - coax_bay_width) / 2;
+
+    inner_length = sqrt(inner_height ^ 2 + inner_width ^ 2);
+    xflip_copy() yflip_copy()
+        left(inner_width / 2 + coax_bay_width / 2) cuboid([inner_length + eps, frame_width, frame_thickness], spin=atan2(inner_height, inner_width));
+  }
 }
 
 module wire_channel() {
@@ -148,10 +162,10 @@ module coax_routing() {
   cuboid([coax_diameter + frame_thickness * 2, height, frame_thickness]) align(TOP) {
       if (include_coax_clamp) {
         top_offset = coax_routing_gap_extra_length + coax_solder_space_width / 2 + frame_width;
-        length = height - frame_width/2 - top_offset;
+        length = height - frame_width / 2 - top_offset;
         fwd(top_offset / 2 - frame_width) {
           stick_height = coax_diameter / 4;
-          cuboid([coax_diameter + frame_thickness * 2, length, coax_diameter * 3 / 4]) {
+          cuboid([coax_bay_width, length, coax_diameter * 3 / 4]) {
             align(TOP, LEFT) prismoid(size1=[frame_thickness, length], size2=[frame_thickness, length], h=stick_height, shift=[stick_height, 0]);
             align(TOP, RIGHT) prismoid(size1=[frame_thickness, length], size2=[frame_thickness, length], h=stick_height, shift=[-stick_height, 0]);
           }
