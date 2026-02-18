@@ -1,0 +1,3 @@
+[submodule "dependencies/BOSL2"]
+	path = dependencies/BOSL2
+	url = https://github.com/BelfrySCAD/BOSL2
