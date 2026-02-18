@@ -13,7 +13,7 @@ include <calculations.scad>;
 
 /* [BASIC ANTENNA DESIGN] */
 // Design frequency in MHz
-freq_mhz = 868;
+freq_mhz = 433;
 // Wire diameter in mm
 wire_dia = 0.5;
 
@@ -63,8 +63,10 @@ $fn = 64;
 coax_diameter = 5;
 
 coax_solder_space_width = 12;
-coax_routing_gap_width = 8;
+coax_routing_gap_width = 6;
 coax_routing_gap_extra_length = 10;
+
+include_coax_clamp = true;
 
 // END SECTION: user adjustable parameters
 
@@ -105,7 +107,7 @@ eps = .01;
 
 // all 4 non-z-plane edges rounded cuboid
 module zrrect(size, corner_radius = corner_radius) {
-  cuboid(size, rounding=max(corner_radius, 0), edges=[LEFT + FRONT, LEFT + BACK, RIGHT + FRONT, RIGHT + BACK]);
+  cuboid(size, rounding=max(corner_radius, 0), edges=[LEFT + FRONT, LEFT + BACK, RIGHT + FRONT, RIGHT + BACK]) children();
 }
 
 module rrect_ring(width, height, radius, corner_radius = corner_radius) {
@@ -122,22 +124,52 @@ module antenna_gap_cutout() {
 }
 
 module main_frame() {
-  zrrect([width + frame_width, height + frame_width, frame_thickness], corner_radius + frame_width / 2);
-  tag("remove") zrrect([width - frame_width, height - frame_width, frame_thickness + eps], corner_radius - frame_width / 2);
+  difference() {
+    zrrect([width + frame_width, height + frame_width, frame_thickness], corner_radius + frame_width / 2);
+    zrrect([width - frame_width, height - frame_width, frame_thickness + eps], corner_radius - frame_width / 2);
+  }
 }
 
 module wire_channel() {
   tag("remove") rrect_ring(width, height, wire_channel_dia / 2);
 }
 
+module coax_routing() {
+  // top notches for easier wire routing
+  back(height / 2) {
+    zrrect([coax_solder_space_width + frame_width * 2, coax_solder_space_width + frame_width * 2, frame_thickness], corner_radius);
+    tag_this("remove") zrrect([coax_solder_space_width, coax_solder_space_width, frame_thickness + eps], corner_radius)
+        align(FWD, shiftout=-eps) {
+          zrrect([coax_routing_gap_width + frame_width * 2, coax_routing_gap_extra_length + frame_width, frame_thickness], corner_radius);
+          tag_this("remove") cuboid([coax_routing_gap_width, coax_routing_gap_extra_length, frame_thickness + eps], rounding=max(corner_radius, 0), edges=[LEFT + FRONT, RIGHT + FRONT]) children();;
+        }
+  }
+  // plate until end of frame
+  cuboid([coax_diameter + frame_thickness * 2, height, frame_thickness]) align(TOP) {
+      if (include_coax_clamp) {
+        top_offset = coax_routing_gap_extra_length + coax_solder_space_width / 2 + frame_width;
+        length = height - frame_width/2 - top_offset;
+        fwd(top_offset / 2 - frame_width) {
+          stick_height = coax_diameter / 4;
+          cuboid([coax_diameter + frame_thickness * 2, length, coax_diameter * 3 / 4]) {
+            align(TOP, LEFT) prismoid(size1=[frame_thickness, length], size2=[frame_thickness, length], h=stick_height, shift=[stick_height, 0]);
+            align(TOP, RIGHT) prismoid(size1=[frame_thickness, length], size2=[frame_thickness, length], h=stick_height, shift=[-stick_height, 0]);
+          }
+          tag("remove") cuboid([coax_diameter, length + eps, coax_diameter * 3 / 4 + eps], rounding=coax_diameter / 2 - eps, edges=[BOTTOM + LEFT, BOTTOM + RIGHT]);
+        }
+      }
+    }
+}
+
 module antenna() {
   diff() {
     main_frame();
-	// I dont know why, but rendering here, speeds up things DRAMATICALLY
-    render() up((frame_thickness- wire_depth) / 2) wire_channel();
+    // I dont know why, but rendering here, speeds up things DRAMATICALLY
+    render() up((frame_thickness - wire_depth) / 2) wire_channel();
     xflip_copy() {
       left(width / 2) back(gap_offset_from_center) antenna_gap_cutout();
     }
+    coax_routing();
   }
 }
 
