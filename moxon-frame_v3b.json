@@ -1,0 +1,30 @@
+{
+    "fileFormatVersion": "1",
+    "parameterSets": {
+        "868-thin-fwd-01": {
+            "$fn": "64",
+            "coax_diameter": "2",
+            "coax_routing_gap_extra_length": "10",
+            "coax_routing_gap_width": "2",
+            "coax_solder_space_width": "12",
+            "connector": "bnc",
+            "corner_radius": "1",
+            "correction_factor": "1.1000000000000001",
+            "enable_cross_beams": "true",
+            "frame_thickness": "1.5",
+            "frame_width": "4",
+            "freq_mhz": "868",
+            "handle_length": "25",
+            "handle_width": "21",
+            "include_coax_clamp": "true",
+            "mounting_direction": "forward",
+            "screw_type": "M3",
+            "show_frequency_text": "true",
+            "text_font": "Liberation Sans:style=Bold",
+            "text_size": "7",
+            "wire_depth_ratio": "0.66000000000000003",
+            "wire_dia": "0.5",
+            "wire_tolerance": "0.10000000000000001"
+        }
+    }
+}
