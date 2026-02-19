@@ -27,8 +27,13 @@ frame_width = 4.0;
 frame_thickness = 1.5;
 // Corner rounding radius (mm)
 corner_radius = 1.0;
+// minimal cutting size (mm) used to determine the gap width
+gap_width =  3;
 // enable cross-beams for extra stability
 enable_cross_beams = true;
+
+// keep gap stabilizers on inside only
+keep_outside_free = true;
 
 /* [WIRE CHANNEL] */
 // Wire clearance tolerance (mm) for 3D-printing
@@ -79,7 +84,6 @@ show_frequency_text = true;
 /* [RENDERING QUALITY] */
 // Circle resolution - higher values = smoother curves but slower rendering
 $fn = 64;
-
 
 // END SECTION: user adjustable parameters
 
@@ -143,13 +147,13 @@ module attach_handle() {
     attach(TOP, BOTTOM) children();
   } else if (mounting_direction == "up") {
     attach(BACK, BOTTOM, align=TOP) children();
-	if (stabilize_mounting_point) {
+    if (stabilize_mounting_point) {
       attach(BACK, BOTTOM, align=LEFT + TOP, spin=-90) handle_stabilizer();
       attach(BACK, BOTTOM, align=RIGHT + TOP, spin=-90) handle_stabilizer();
     }
   } else if (mounting_direction == "forward") {
     attach(BACK, BOTTOM, align=RIGHT + TOP, spin=90) children();
-	if (stabilize_mounting_point) {
+    if (stabilize_mounting_point) {
       attach(BACK, BOTTOM, align=RIGHT + TOP, spin=0) handle_stabilizer();
     }
   } else {
@@ -169,15 +173,19 @@ module handle() {
 
 // SECTION: antenna
 
-module antenna_gap_cutout() {
-  _cutout_width = 3 + wire_channel_dia;
-  zrrect([frame_width * 2 + _cutout_width, frame_width * 2 + gap_length, frame_thickness], corner_radius=2);
-  tag("remove") zrrect([_cutout_width, gap_length, frame_thickness + 5 * eps]);
+module antenna_outer_rrect() {
+  zrrect([width + frame_width, height + frame_width, frame_thickness], corner_radius + frame_width / 2) children();
 }
 
-module main_frame() {
+module antenna_gap_cutout() {
+  module outer() zrrect([frame_width * 2 + gap_width, frame_width * 2 + gap_length, frame_thickness], corner_radius=2);
+  if(keep_outside_free) {right_half() outer();} else outer();
+  tag("remove") zrrect([gap_width, gap_length, frame_thickness + 5 * eps]);
+}
+
+module antenna_main_frame() {
   difference() {
-    zrrect([width + frame_width, height + frame_width, frame_thickness], corner_radius + frame_width / 2) children();
+    antenna_outer_rrect() children();
     zrrect([width - frame_width, height - frame_width, frame_thickness + eps], corner_radius - frame_width / 2);
   }
 
@@ -198,12 +206,13 @@ module wire_channel() {
 
 module coax_routing() {
   // top notches for easier wire routing
+  module outer() zrrect([coax_solder_space_width + frame_width * 2, coax_solder_space_width + frame_width * 2, frame_thickness], corner_radius);
   back(height / 2) {
-    zrrect([coax_solder_space_width + frame_width * 2, coax_solder_space_width + frame_width * 2, frame_thickness], corner_radius);
-    tag_this("remove") zrrect([coax_solder_space_width, coax_solder_space_width, frame_thickness + eps], corner_radius)
+    if (keep_outside_free) {front_half() outer();} else outer();
+    tag_this("remove") zrrect([coax_solder_space_width, coax_solder_space_width, frame_thickness + eps], min(corner_radius, coax_solder_space_width / 2))
         align(FWD, shiftout=-eps) {
           zrrect([coax_routing_gap_width + frame_width * 2, coax_routing_gap_extra_length + frame_width, frame_thickness], corner_radius);
-          tag_this("remove") cuboid([coax_routing_gap_width, coax_routing_gap_extra_length, frame_thickness + eps], rounding=max(corner_radius, 0), edges=[LEFT + FRONT, RIGHT + FRONT]) children();;
+          tag_this("remove") cuboid([coax_routing_gap_width, coax_routing_gap_extra_length, frame_thickness + eps], rounding=min(max(corner_radius, 0), coax_routing_gap_width / 2), edges=[LEFT + FRONT, RIGHT + FRONT]) children();
         }
   }
   // plate until end of frame
@@ -225,7 +234,7 @@ module coax_routing() {
 
 module antenna() {
   diff() {
-    main_frame() children();
+    antenna_main_frame() children();
     // I dont know why, but rendering here, speeds up things DRAMATICALLY
     render() up((frame_thickness - wire_depth) / 2) wire_channel();
     xflip_copy() {
